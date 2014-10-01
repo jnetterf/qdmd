@@ -55,9 +55,9 @@ int main(string[] args) {
             .array
             .emitBindings);
 
-    if (".qdmd/libappui.pro.proto".exists) {
+    if ("libappui.pro.proto".exists) {
         "cp libappui.pro.proto .qdmd/libappui.pro"
-            .execute;
+            .executeShell;
     } else {
         File(".qdmd/libappui.pro", "w")
             .write(proPrelude);
@@ -129,6 +129,7 @@ string emitBindings(string[] files) {
     static char* qdmd_argv[] = {qdmd_appname};
 
     extern "C" void qdmd_main(const char* c_data) {
+        DragonShim* s = new DragonShim();
         QByteArray data = c_data;
         QApplication* app = new QApplication(qdmd_argc, qdmd_argv);
         QQmlApplicationEngine* engine = new QQmlApplicationEngine(); ]" ~
@@ -137,7 +138,13 @@ string emitBindings(string[] files) {
         QObject *topLevel = engine->rootObjects().value(0);
         QQuickWindow *window = qobject_cast<QQuickWindow *>(topLevel);
         window->show();
-        app->exec();
+        app->setQuitOnLastWindowClosed(false);
+        QObject::connect(window, SIGNAL(closing(QQuickCloseEvent*)), app, SLOT(quit()));
+        if (!window) {
+            app->deleteLater();
+        } else {
+            app->exec();
+        }
         return;
     }]";
 

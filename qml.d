@@ -42,6 +42,7 @@
  * terms of the Do What The Fuck You Want To Public License, Version 2,
  * as published by Sam Hocevar.  See http://www.wtfpl.net/ for more details.
  */
+module qdmd.qml;
 
 import std.algorithm;
 import std.array;
@@ -163,6 +164,18 @@ string ctfeJoinAlpha(T)(T s) {
     return ret;
 }
 
+string findLastDropOne(T, U)(T s, U m) {
+    string ret;
+    foreach(c; s) {
+        if (c == m) {
+            ret = "";
+        } else {
+            ret ~= c;
+        }
+    }
+    return ret;
+}
+
 void render(string str, string filename)() {
     enum lines = str
         .split("\n")
@@ -171,6 +184,7 @@ void render(string str, string filename)() {
         .array;
     pragma(msg, "@qdmd.rcc.import@ ", lines);
     if (!__ctfe) {
+        "Madness begins".writeln();
         qdmd_main(str);
     }
 }
@@ -195,7 +209,7 @@ string declare(string manifest)() {
     assert(parts[1].split(".").length == 2, "Version syntax: <majorVersion>.<minorVersion>");
 
     enum module_ = parts[0].retro.find(".").retro.dropBackOne;
-    enum T = parts[0].find(".").dropOne;
+    enum T = parts[0].findLastDropOne('.');
     enum major = parts[1].split(".")[0].to!int;
     enum minor = parts[1].split(".")[1].to!int;
 
@@ -343,7 +357,7 @@ string declare(string manifest)() {
                 // is likely to work more often.
                 retStr = "";
                 sStr = "const char* val; int x = ";
-                sStr2 = "asm (\\\"movl %%edx, %0;\\\" : \\\"=r\\\" ( val )); " ~
+                sStr2 = "asm (\\\"movq %%rdx, %0;\\\" : \\\"=r\\\" ( val )); " ~
                     "return QString::fromLocal8Bit(val, int(x));";
             }
             return "Q_SLOT " ~ dToQt(this.type, true, isJson) ~ " " ~ this.name ~ "(" ~ ax.join(", ") ~ ") {" ~ retStr ~ sStr ~ "m_itfce->" ~ this.name ~ "(" ~ bx.join(", ") ~ "); " ~ sStr2 ~ " }";
