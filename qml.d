@@ -221,6 +221,9 @@ string declare(string manifest)() {
         if (isJson && isReturn) {
             return "const char*";
         }
+        if (type == "const(char*)") {
+            return "const char*";
+	}
         if (type == "string") {
             // See note on eax/edx below.
             return "int";
@@ -234,6 +237,9 @@ string declare(string manifest)() {
         if (type == "string") {
             return "QString";
         }
+	if (type == "const(char*)") {
+            return "const char*";
+	}
         return type;
     }
 
